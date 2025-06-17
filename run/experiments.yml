@@ -1,0 +1,98 @@
+LLM:
+- gemini-2.0-flash
+- gemini-2.5-flash-preview-04-17
+- Qwen2.5-7B-Instruct
+- Qwen3-8B
+- Qwen3-0.6B
+- claude-3-5-sonnet-20241022
+- claude-3-7-sonnet-20250219
+- claude-3-7-classes
+- all_objects
+- objects_of_assigned_description
+
+prompt:
+- refAV_standard_context
+
+split:
+- test
+- val
+
+tracker:
+# RefProg input
+- DGIST_Tracking
+- Le3DE2D_Tracking
+- ReVoxelDet_Tracking
+- TransFusion_Tracking
+- Valeo4Cast_Tracking
+- VoxelDet_Tracking
+- AV2_Detections
+- BEVFusion_Detections
+- Le3DE2D_Detections
+- Valeo4Cast_Detections
+- ReVoxelDet_Detections
+- LT3D_Detections
+- ground_truth
+- ground_truth_2hz
+- AV2_Detections_2hz
+- BEVFusion_Detections_2hz
+- Le3DE2D_Detections_2hz
+- Valeo4Cast_Detections_2hz
+- ReVoxelDet_Detections_2hz
+- LT3D_Detections_2hz
+# Baselines
+- Le3DE2D_Tracking_clip
+- ReVoxelDet_Tracking_clip
+- ground_truth_clip
+- TransFusion_Tracking_clip
+- Valeo4Cast_Tracking_clip
+- groundingSAM
+
+
+
+exp_claude4.0:
+  name: exp_claude4.0
+  LLM: claude-opus-4-20250514
+  plan: False
+  voting: False
+  split: test
+  tracker: Le3DE2D_tracking
+
+exp_gemini-2.5-pro-plan:
+  name: exp_gemini-2.5-pro-plan
+  LLM: gemini-2.5-pro-plan
+  plan: True
+  voting: False
+  split: test
+  tracker: Le3DE2D_tracking
+  
+exp_gemini-2.5-pro-voting:
+  name: exp_gemini-2.5-pro-voting
+  LLM: gemini-2.5-pro-preview-06-05
+  plan: True
+  voting: True
+  split: test
+  tracker: Le3DE2D_tracking
+
+exp_gemini-2.5-pro-refine:
+  name: exp_gemini-2.5-pro-refine
+  LLM: gemini-2.5-pro-preview-06-05
+  plan: False
+  voting: True
+  split: test
+  tracker: Le3DE2D_tracking
+
+exp_gemini-2.5-pro-voting_refine:
+  name: exp_gemini-2.5-pro-voting_refine
+  LLM: gemini-2.5-pro-preview-06-05
+  plan: False
+  voting: False
+  split: test
+  tracker: Le3DE2D_tracking
+
+exp_gemini-2.5-pro-preview-06-05:
+  name: gemini-2.5-pro-preview-06-05
+  LLM: gemini-2.5-pro-preview-06-05
+  plan: False
+  voting: False
+  split: test
+  tracker: Le3DE2D_tracking

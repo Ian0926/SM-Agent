@@ -1,0 +1,213 @@
+```python
+description = 'vehicle in the wrong lane'
+
+# Get all vehicles in the scene
+vehicles = get_objects_of_category(log_dir, category="VEHICLE")
+
+# Exclude buses from consideration (since buses are allowed in bus lanes)
+non_buses = scenario_not(is_category)(vehicles, log_dir, category="BUS")
+
+# Identify non-bus vehicles currently in bus lanes (violating lane rule)
+non_bus_in_bus_lane = on_lane_type(non_buses, log_dir, lane_type='BUS')
+
+# Identify non-bike vehicles currently in bike lanes (violating lane rule)
+non_bike_in_bike_lane = on_lane_type(non_buses, log_dir, lane_type='BIKE')
+
+# Combine both types of violations: being in wrong lane (bus lane or bike lane)
+in_wrong_lane_type = scenario_or([non_bus_in_bus_lane, non_bike_in_bike_lane])
+
+# Output all detected wrong-lane vehicles
+output_scenario(in_wrong_lane_type, description, log_dir, output_dir)
+```
+
+```python
+description = 'vehicle changing lanes'
+
+# Get all vehicles in the scene
+vehicles = get_objects_of_category(log_dir, category='VEHICLE')
+
+# Identify vehicles currently performing a lane change
+lane_changes = changing_lanes(vehicles, log_dir)
+
+# Output the detected lane-changing vehicles
+output_scenario(lane_changes, description, log_dir, output_dir)
+```
+
+```python
+description = 'accelerating to the side'
+
+# Get all objects in the scene
+all_objects = get_objects_of_category(log_dir, category='ANY')
+
+# Select objects exhibiting significant lateral acceleration (sideways motion)
+# Exclude objects with lateral acceleration near zero (stable / straight motion)
+accel = scenario_not(has_lateral_acceleration)(all_objects, log_dir, min_accel=-1, max_accel=1)
+
+# Output objects accelerating to the side
+output_scenario(accel, description, log_dir, output_dir)
+```
+
+```python
+description='vehicle near multiple pedestrians'
+
+# Get all vehicles and pedestrians in the scene
+vehicles = get_objects_of_category(log_dir, category='VEHICLE')
+peds = get_objects_of_category(log_dir, category='PEDESTRIAN')
+
+# Identify vehicles that are near at least 2 pedestrians
+vehicles_near_peds = near_objects(vehicles, peds, log_dir, min_objects=2)
+
+# Output vehicles near multiple pedestrians
+output_scenario(vehicles_near_peds, description, log_dir, output_dir)
+```
+
+```python
+description='turning left'
+
+# Get all vehicles in the scene
+vehicle_uuids = get_objects_of_category(log_dir, category='VEHICLE')
+
+# Identify vehicles currently performing a left turn
+left_turn = turning(vehicle_uuids, log_dir, direction='left')
+
+# Output vehicles turning left
+output_scenario(left_turn, description, log_dir, output_dir)
+```
+
+```python
+description='pedestrian crossing in front of vehicles'
+
+# Get all vehicles and pedestrians in the scene
+vehicles = get_objects_of_category(log_dir, category='VEHICLE')
+peds = get_objects_of_category(log_dir, category='PEDESTRIAN')
+
+# Select stationary vehicles (likely yielding to pedestrians)
+stationary_vehicles = stationary(vehicles, log_dir)
+
+# Identify pedestrians crossing in front of stationary vehicles
+peds = reverse_relationship(being_crossed_by)(stationary_vehicles, peds, log_dir)
+
+# Output pedestrians currently crossing in front of vehicles
+output_scenario(peds, description, log_dir, output_dir)
+```
+
+```python
+description='jaywalking pedestrian'
+
+# Get all pedestrians in the scene
+peds = get_objects_of_category(log_dir, category='PEDESTRIAN')
+
+# Select pedestrians currently on the road
+peds_on_road = on_road(peds, log_dir)
+
+# Identify pedestrians on the road but NOT at a designated pedestrian crossing (jaywalking)
+jaywalking_peds = scenario_not(at_pedestrian_crossing)(peds_on_road, log_dir)
+
+# Output jaywalking pedestrians
+output_scenario(jaywalking_peds, description, log_dir, output_dir)
+```
+
+```python
+description = 'the vehicle behind another vehicle being crossed by a jaywalking pedestrian'
+
+# Get jaywalking pedestrians in the scene
+peds = get_objects_of_category(log_dir, category='PEDESTRIAN')
+peds_on_road = on_road(peds, log_dir)
+jaywalking_peds = scenario_not(at_pedestrian_crossing)(peds_on_road, log_dir)
+
+# Get moving vehicles in the scene (exclude stationary vehicles)
+vehicles = get_objects_of_category(log_dir, category='VEHICLE')
+moving_vehicles = scenario_and([in_drivable_area(vehicles, log_dir), scenario_not(stationary)(vehicles, log_dir)])
+
+# Identify moving vehicles currently being crossed by jaywalking pedestrians
+crossed_vehicles = being_crossed_by(moving_vehicles, jaywalking_peds, log_dir)
+
+# Identify vehicles located behind the crossed vehicles (within 25 meters)
+behind_crossed_vehicle = get_objects_in_relative_direction(crossed_vehicles, moving_vehicles, log_dir, direction='backward', max_number=1, within_distance=25)
+
+# Output vehicles behind jaywalking-related crossed vehicles
+output_scenario(behind_crossed_vehicle, description, log_dir, output_dir)
+```
+
+
+```python
+description='pedestrian walking between two stopped vehicles'
+
+# Get all vehicles and pedestrians in the scene
+vehicles = get_objects_of_category(log_dir, category='VEHICLE')
+peds = get_objects_of_category(log_dir, category='PEDESTRIAN')
+
+# Select stationary vehicles
+stationary_vehicles = stationary(vehicles, log_dir)
+
+# Identify pedestrians positioned behind at least one stationary vehicle
+peds_behind = get_objects_in_relative_direction(
+    stationary_vehicles, peds, log_dir, direction='behind', within_distance=5, lateral_thresh=0.5
+)
+
+# Identify pedestrians positioned in front of at least one stationary vehicle
+peds_in_front = get_objects_in_relative_direction(
+    stationary_vehicles, peds, log_dir, direction='front', within_distance=5, lateral_thresh=0.5
+)
+
+# Identify pedestrians that satisfy both conditions → between two vehicles
+peds_between_vehicles = scenario_and([peds_behind, peds_in_front])
+
+# Output pedestrians walking between two stopped vehicles
+output_scenario(peds_between_vehicles, description, log_dir, output_dir)
+```
+
+```python
+description = 'vehicle with another vehicle in their lane'
+
+# Get all vehicles in the scene
+vehicles = get_objects_of_category(log_dir, category='VEHICLE')
+
+# Identify pairs of vehicles that are in the same lane
+vehicles_in_same_lane = in_same_lane(vehicles, vehicles, log_dir)
+
+# Output vehicles sharing the same lane
+output_scenario(vehicles_in_same_lane, description, log_dir, output_dir)
+```
+
+```python
+description = 'ego vehicle being overtaken on right by a semi'
+
+# Get ego vehicle and semi-truck objects in the scene
+vehicles = get_objects_of_category(log_dir, category='EGO_VEHICLE')
+semi = get_objects_of_category(log_dir, category='TRUCK_CAB')
+
+# Select moving ego vehicle instances
+moving_vehicles = scenario_not(stationary)(vehicles, log_dir)
+
+# Identify ego vehicles being overtaken on the right by a semi-truck (within 5m forward and 10m lateral threshold)
+overtaken_on_right = being_crossed_by(moving_vehicles, semi, log_dir, direction='right', forward_thresh=5, lateral_thresh=10)
+
+# Output overtaking scenarios
+output_scenario(overtaken_on_right, description, log_dir, output_dir)
+```
+
+```python
+#Lane splitting is moving between two cars that are in adjacent lanes, usually during slow traffic
+description = 'lane splitting motorcycle'
+#Getting motorcycles that are on the road and moving
+motorcycles = get_objects_of_category(log_dir, category='MOTORCYCLE')
+active_motocycles = scenario_not(stationary)(motorcycles, log_dir)
+
+
+#Getting vehicles that are to the left and right of any active motorcycle
+vehicles = get_objects_of_category(log_dir, category='VEHICLE')
+vehicles_left_of_motorcycle = get_objects_in_relative_direction(active_motocycles, vehicles, log_dir, direction='left', min_number=1, max_number=1, within_distance=4, lateral_thresh=2)
+vehicles_right_of_motorcycle = get_objects_in_relative_direction(active_motocycles, vehicles, log_dir, direction='right', min_number=1, max_number=1, within_distance=4, lateral_thresh=2)
+
+
+#Motorcycle must be in the same the same lane as one of the cars
+motorcycle_in_lane_to_left = in_same_lane(active_motocycles, vehicles_right_of_motorcycle, log_dir)
+motorcycle_in_lane_to_right = in_same_lane(active_motocycles, vehicles_left_of_motorcycle, log_dir)
+
+
+#The motorcycle can be in the same lane as either the car to the left or right of it
+lane_splitting_motorcycles = scenario_or([has_objects_in_relative_direction(motorcycle_in_lane_to_left, vehicles_left_of_motorcycle, log_dir, direction='left', within_distance=4, lateral_thresh=2),
+  has_objects_in_relative_direction(motorcycle_in_lane_to_right, vehicles_right_of_motorcycle, log_dir, direction='right', within_distance=4, lateral_thresh=2)])
+output_scenario(lane_splitting_motorcycles, description, log_dir, output_dir)
+```
