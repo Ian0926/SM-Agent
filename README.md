@@ -3,10 +3,6 @@
 
 This repository contains the official implementation for the 1st place solution in the CVPR 2025 WAD Argoverse 2 Scenario Mining Challenge.
 
-<p align="center">
-  <img src="pipeline.png" alt="RefAV Method">
-</p>
-
 ## 1. Installation
 
 First, create and activate a Conda environment.
